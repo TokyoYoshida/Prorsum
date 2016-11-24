@@ -1,25 +1,29 @@
 import Foundation
 import Dispatch
 
-let _operationQ = OperationQueue()
+private let _operationQ = createOperationQueue()
 
 func swiftPanic(error: Error){
     fatalError("\(error)")
 }
 
-public func go(_ task: @autoclosure @escaping (Void) -> Void){
-    _go(task)
+public func go(_ routine: @autoclosure @escaping (Void) -> Void){
+    _go(routine)
 }
 
-public func go(_ task: @escaping (Void) -> Void){
-    _go(task)
+public func go(_ routine: @escaping (Void) -> Void){
+    _go(routine)
 }
 
-private func _go(_ task: @escaping (Void) -> Void){
+public func gomain(_ routine: @escaping (Void) -> Void){
+    OperationQueue.main.addOperation(routine)
+}
+
+private func _go(_ routine: @escaping (Void) -> Void){
     let operation = BlockOperation()
     
     operation.addExecutionBlock {
-        task()
+        routine()
     }
     
     _operationQ.addOperation(operation)
@@ -27,4 +31,13 @@ private func _go(_ task: @escaping (Void) -> Void){
 
 public func runLoop(){
     RunLoop.main.run()
+}
+
+private func createOperationQueue() -> OperationQueue {
+    let operationQ = OperationQueue()
+    if let _maxProcs = ProcessInfo.processInfo.environment["PRORSUMMAXPROCS"], let maxProcs = Int(_maxProcs) {
+        operationQ.maxConcurrentOperationCount = maxProcs
+    }
+    
+    return operationQ
 }
